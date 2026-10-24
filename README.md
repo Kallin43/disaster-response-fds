@@ -22,8 +22,6 @@ python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Streamlit prints a local address, usually <http://localhost:8501>, and opens the dashboard in your browser. Keep the terminal open while presenting. Press `Control+C` in that terminal to stop the app.
-
 If the dataset is missing, put `real_india_disasters_70_EMDAT.csv` in the same folder as `app.py`. The dashboard shows a notice and does not use fabricated or sample data.
 
 ## What the dashboard contains
@@ -47,12 +45,3 @@ All filters affect the KPI cards, charts, and table. Search narrows the already 
 - The severity field is presented as the numeric value supplied in the CSV. The extract does not document how it was derived, so this app does not claim that it is an official EM-DAT classification.
 - Invalid dates are excluded from the year filter and time-series chart; their original values remain in the source-record table.
 - The dashboard analyzes the supplied extract but does not independently verify the underlying records.
-
-## Five-minute demonstration
-
-1. **0:00–0:40 — Introduce the question.** Explain that the dashboard explores disaster frequency and reported impacts in the supplied India EM-DAT extract.
-2. **0:40–1:30 — Read the KPIs.** Explain the filtered event count, reported-value totals, mean loss, and the reported-value coverage in each footnote or tooltip.
-3. **1:30–2:30 — Apply filters.** Select one type, narrow the year range, and choose a severity level. Show that every KPI and chart updates, and that the event table reflects the same selection. Press **Clear all** to restore the initial view.
-4. **2:30–3:30 — Explore frequency and impact.** Hover on the annual trend, then switch the impact profile between available measures. Point out the unit and the reported-record count in the tooltip.
-5. **3:30–4:30 — Search source records.** Search for a subtype, location, or EM-DAT ID and inspect the original row values.
-6. **4:30–5:00 — State the limits.** Explain that missing values stay missing, the severity derivation is undocumented in the extract, and the dashboard has not independently verified the records. If Tableau is required, mention that faculty approval is needed for a Streamlit substitution.

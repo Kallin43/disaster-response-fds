@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import re
-from typing import Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -44,10 +44,7 @@ IMPACTS = {
     "Reported homeless population": ("homeless", "people"),
     "Reported economic loss": ("economic_loss_000_usd", "thousand USD"),
 }
-REQUIRED_FOR_DASHBOARD = [
-    "date", "disaster_type", "severity", "deaths", "total_affected",
-    "economic_loss_000_usd",
-]
+REQUIRED_FOR_DASHBOARD = ["date", "disaster_type", "severity", "deaths", "total_affected", "economic_loss_000_usd"]
 
 
 def normalize_header(value: object) -> str:
@@ -82,10 +79,7 @@ def build_calculation_frame(raw: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, 
         work["_parsed_date"] = pd.NaT
         work["_year"] = pd.Series(pd.NA, index=raw.index, dtype="Int64")
 
-    for column in [
-        "deaths", "injured", "affected", "homeless", "total_affected",
-        "economic_loss_000_usd", "severity",
-    ]:
+    for column in ["deaths", "injured", "affected", "homeless", "total_affected", "economic_loss_000_usd", "severity"]:
         if column in work:
             work[column] = pd.to_numeric(work[column], errors="coerce")
         else:
@@ -117,18 +111,14 @@ def count_chart(data: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=yearly["_year"], y=yearly["events"], mode="lines+markers", name="Events",
-        line=dict(color=BLUE, width=2.5),
-        marker=dict(size=7, color=BLUE, line=dict(color=WHITE, width=2)),
+        line=dict(color=BLUE, width=2.5), marker=dict(size=7, color=BLUE, line=dict(color=WHITE, width=2)),
         hovertemplate="Year %{x}<br>Events %{y:,}<extra></extra>",
     ))
     fig.update_layout(
-        height=310, margin=dict(l=10, r=18, t=12, b=10), paper_bgcolor=WHITE,
-        plot_bgcolor=WHITE, font=dict(family="Arial, sans-serif", color=NAVY, size=12),
-        showlegend=False,
-        xaxis=dict(title="Year", tickformat="d", dtick=2, showgrid=False,
-                   zeroline=False, linecolor=LINE),
-        yaxis=dict(title="Disaster events", rangemode="tozero", dtick=1,
-                   gridcolor=GRID, zeroline=False),
+        height=310, margin=dict(l=10, r=18, t=12, b=10), paper_bgcolor=WHITE, plot_bgcolor=WHITE,
+        font=dict(family="Arial, sans-serif", color=NAVY, size=12), showlegend=False,
+        xaxis=dict(title="Year", tickformat="d", dtick=2, showgrid=False, zeroline=False, linecolor=LINE),
+        yaxis=dict(title="Disaster events", rangemode="tozero", dtick=1, gridcolor=GRID, zeroline=False),
         hovermode="x unified",
     )
     return fig
@@ -145,15 +135,11 @@ def impact_chart(data: pd.DataFrame, impact_column: str, impact_unit: str) -> go
         x=grouped["total"], y=grouped["disaster_type"], orientation="h",
         marker=dict(color=BLUE, line=dict(width=0)),
         customdata=grouped["reported"],
-        hovertemplate=(
-            "%{y}<br>Reported impact: %{x:,.0f}"
-            "<br>Records with values: %{customdata}<extra></extra>"
-        ),
+        hovertemplate="%{y}<br>Reported impact: %{x:,.0f}<br>Records with values: %{customdata}<extra></extra>",
     ))
     fig.update_layout(
-        height=max(310, min(470, 42 * len(grouped) + 80)),
-        margin=dict(l=10, r=18, t=12, b=10), paper_bgcolor=WHITE,
-        plot_bgcolor=WHITE, font=dict(family="Arial, sans-serif", color=NAVY, size=12),
+        height=max(310, min(470, 42 * len(grouped) + 80)), margin=dict(l=10, r=18, t=12, b=10),
+        paper_bgcolor=WHITE, plot_bgcolor=WHITE, font=dict(family="Arial, sans-serif", color=NAVY, size=12),
         showlegend=False,
         xaxis=dict(title=impact_unit, rangemode="tozero", gridcolor=GRID, zeroline=False),
         yaxis=dict(title="", automargin=True, showgrid=False),
@@ -168,12 +154,7 @@ def inject_styles() -> None:
         @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap');
         :root { --navy:#172A3A; --blue:#087FA5; --teal:#238F82; --amber:#B87919; --muted:#788A98; --line:#D9E3E8; --paper:#F4F7F8; --success:#EFF8F5; --warning:#FFF6E5; }
         .stApp, .stApp [data-testid="stMain"], .stApp [data-testid="stSidebar"] { font-family:'DM Sans', sans-serif; color:var(--navy); }
-        .stApp {
-          background:var(--paper);
-          /* Fallback accent for native Streamlit/BaseWeb controls if config.toml is omitted in deployment. */
-          --primary-color:var(--blue) !important;
-          --primaryColor:var(--blue) !important;
-        }
+        .stApp { background:var(--paper); }
         /* Streamlit's toolbar remains visible. Reserve a clear band below it for app content. */
         [data-testid="stMainBlockContainer"] { max-width:1440px; padding-top:3.75rem; padding-bottom:2rem; }
         .stApp h1,.stApp h2,.stApp h3 { color:var(--navy); letter-spacing:-.045em; }
@@ -198,17 +179,16 @@ def inject_styles() -> None:
         [data-testid="stButton"] button:focus-visible, [data-testid="stPopover"] button:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
         [data-testid="stPopover"] button { color:var(--blue); }
         [data-testid="stMain"] a, [data-testid="stMain"] a:visited { color:var(--blue); }
-        .stApp [data-baseweb="tag"] { background-color:var(--blue) !important; color:#fff !important; border:1px solid var(--blue) !important; border-radius:2px; max-width:100%; }
-        .stApp [data-baseweb="tag"] * { color:#fff !important; }
-        .stApp [data-baseweb="tag"] svg { fill:#fff !important; }
+        [data-testid="stMain"] [data-baseweb="tag"] { background-color:var(--blue); color:#fff; border:1px solid var(--blue); border-radius:2px; max-width:100%; }
+        [data-testid="stMain"] [data-baseweb="tag"] svg { fill:#fff; }
         [data-testid="stMain"] [data-testid="stMultiSelect"] [data-baseweb="select"] > div { min-height:42px; height:auto; flex-wrap:wrap; row-gap:4px; overflow:visible; }
         [data-testid="stMain"] [data-baseweb="select"]:focus-within, [data-testid="stMain"] [data-baseweb="input"]:focus-within, [data-testid="stMain"] textarea:focus, [data-testid="stMain"] input:focus { border-color:var(--blue); box-shadow:0 0 0 1px var(--blue); }
-        .stApp [role="option"][aria-selected="true"] { background:#E5F2F5 !important; color:var(--navy) !important; }
-        .stApp [role="option"]:hover { background:#F0F7F8 !important; color:var(--navy) !important; }
+        .stApp [role="option"][aria-selected="true"] { background:#E5F2F5; color:var(--navy); }
+        .stApp [role="option"]:hover { background:#F0F7F8; color:var(--navy); }
         [data-testid="stMain"] [data-testid="stSlider"] { color:var(--navy); }
-        .stApp [data-testid="stSlider"] [role="slider"] { background-color:var(--blue) !important; border:2px solid #fff !important; box-shadow:0 0 0 1px var(--blue) !important; }
-        .stApp [data-testid="stSlider"] [role="slider"]:focus { box-shadow:0 0 0 3px rgba(8,127,165,.24) !important; }
-        [data-testid="stMain"] [data-testid="stSlider"] label, [data-testid="stMain"] [data-testid="stTickBar"] { color:var(--muted); }
+        [data-testid="stMain"] [data-testid="stSlider"] [role="slider"] { background-color:var(--blue); border:2px solid #fff; box-shadow:0 0 0 1px var(--blue); }
+        [data-testid="stMain"] [data-testid="stSlider"] [role="slider"]:focus { box-shadow:0 0 0 3px rgba(8,127,165,.24); }
+        [data-testid="stMain"] [data-testid="stSlider"] label, [data-testid="stMain"] [data-testid="stSlider"] [data-testid="stTickBar"] { color:var(--muted); }
         [data-testid="stMetric"] { position:relative; border:1px solid var(--line); border-top:2px solid var(--blue); border-radius:2px; background:#fff; padding:17px 17px 15px; min-height:125px; box-shadow:none; }
         [data-testid="stHorizontalBlock"]:has([data-testid="stMetric"]) > [data-testid="column"]:nth-child(3) [data-testid="stMetric"] { border-top-color:var(--teal); }
         [data-testid="stVerticalBlockBorderWrapper"] { border:1px solid var(--line); border-radius:2px; background:#fff; }
@@ -281,33 +261,17 @@ except (pd.errors.ParserError, UnicodeDecodeError, OSError, ValueError) as error
 
 missing_fields = [field for field in REQUIRED_FOR_DASHBOARD if field not in resolved_columns]
 if missing_fields:
-    st.warning(
-        "Some expected fields are unavailable: " + ", ".join(missing_fields)
-        + ". Related filters, charts, or impact KPIs will be limited; records will not be fabricated."
-    )
+    st.warning("Some expected fields are unavailable: " + ", ".join(missing_fields) + ". Related filters, charts, or impact KPIs will be limited; records will not be fabricated.")
 else:
-    st.markdown(
-        '<div class="success">Source integrity preserved · CSV loaded successfully · '
-        'unreported impact values remain unreported</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="success">Source integrity preserved · CSV loaded successfully · unreported impact values remain unreported · Use Light Mode</div>', unsafe_allow_html=True)
 
 all_years = sorted(data["_year"].dropna().astype(int).unique().tolist())
 dataset_span = f"{all_years[0]}–{all_years[-1]} DATASET" if all_years else "ALL AVAILABLE DATES"
 hero_left, hero_right = st.columns([7, 3], vertical_alignment="center")
 with hero_left:
-    st.markdown(
-        f'<div class="micro hero-eyebrow">RELIEF PLANNING INTELLIGENCE · {dataset_span}</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="hero-title">Data-Driven<br><span class="accent">Disaster Response</span></div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="hero-subtitle">Predicting relief needs and optimizing resource allocation.</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<div class="micro hero-eyebrow">RELIEF PLANNING INTELLIGENCE · {dataset_span}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-title">Data-Driven<br><span class="accent">Disaster Response</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-subtitle">Predicting relief needs and optimizing resource allocation.</div>', unsafe_allow_html=True)
 with hero_right:
     st.markdown(
         '<div class="hero-aside">A focused view of recorded disaster events and reported impacts across India, supporting evidence-led relief planning.'
@@ -317,10 +281,7 @@ with hero_right:
 
 
 # One connected filter area. State is set before widgets are created so Clear all works.
-type_options = (
-    sorted(data["disaster_type"].dropna().astype(str).unique().tolist())
-    if "disaster_type" in data else []
-)
+type_options = sorted(data["disaster_type"].dropna().astype(str).unique().tolist()) if "disaster_type" in data else []
 severity_options = sorted(data["severity"].dropna().unique().tolist()) if "severity" in data else []
 with st.container(border=True, key="global_filters"):
     filter_title, clear_col = st.columns([8, 1.2], vertical_alignment="center")
@@ -342,23 +303,17 @@ with st.container(border=True, key="global_filters"):
     if default_years:
         st.session_state.setdefault("filter_years", default_years)
 
-    filter_type_col, filter_year_col, filter_severity_col = st.columns(
-        [1.15, 1.35, 1.0], gap="large"
-    )
+    filter_type_col, filter_year_col, filter_severity_col = st.columns([1.15, 1.35, 1.0], gap="large")
     with filter_type_col:
         selected_types = st.multiselect(
-            "Disaster type", type_options, key="filter_types",
-            disabled=not bool(type_options),
+            "Disaster type", type_options, key="filter_types", disabled=not bool(type_options),
             help="Select one or more disaster types."
         )
         if not type_options:
             st.caption("Disaster type field unavailable.")
     with filter_year_col:
         if len(all_years) > 1:
-            selected_year_range = st.slider(
-                "Year range", min_value=all_years[0], max_value=all_years[-1],
-                key="filter_years"
-            )
+            selected_year_range = st.slider("Year range", min_value=all_years[0], max_value=all_years[-1], key="filter_years")
         elif len(all_years) == 1:
             selected_year_range = (all_years[0], all_years[0])
             st.text_input("Year range", value=str(all_years[0]), disabled=True)
@@ -367,10 +322,8 @@ with st.container(border=True, key="global_filters"):
             st.text_input("Year range", value="No valid dates", disabled=True)
     with filter_severity_col:
         selected_severity = st.multiselect(
-            "Severity source level", severity_options, key="filter_severity",
-            format_func=lambda value: f"Level {value:g}",
-            disabled=not bool(severity_options),
-            help="Numeric levels as supplied in the source file."
+            "Severity source level", severity_options, key="filter_severity", format_func=lambda value: f"Level {value:g}",
+            disabled=not bool(severity_options), help="Numeric levels as supplied in the source file."
         )
         if not severity_options:
             st.caption("Severity field unavailable.")
@@ -410,47 +363,24 @@ st.markdown('<div style="height:24px"></div>', unsafe_allow_html=True)
 chart_left, chart_right = st.columns(2, gap="large")
 with chart_left:
     with st.container(border=True):
-        st.markdown(
-            '<div class="section-kicker">01 / FREQUENCY</div>'
-            '<div class="section-title">Annual disaster events</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown('<div class="section-kicker">01 / FREQUENCY</div><div class="section-title">Annual disaster events</div>', unsafe_allow_html=True)
         if filtered["_year"].notna().any():
-            st.plotly_chart(
-                count_chart(filtered), use_container_width=True,
-                config={"displayModeBar": False}
-            )
+            st.plotly_chart(count_chart(filtered), use_container_width=True, config={"displayModeBar": False})
         else:
             st.info("No valid dates are available for the selected records.")
 
 with chart_right:
     with st.container(border=True):
-        st.markdown(
-            '<div class="section-kicker">02 / IMPACT PROFILE</div>'
-            '<div class="section-title">By disaster type</div>',
-            unsafe_allow_html=True,
-        )
-        available_impact_labels = [
-            label for label, (column, _) in IMPACTS.items()
-            if column in resolved_columns
-        ]
+        st.markdown('<div class="section-kicker">02 / IMPACT PROFILE</div><div class="section-title">By disaster type</div>', unsafe_allow_html=True)
+        available_impact_labels = [label for label, (column, _) in IMPACTS.items() if column in resolved_columns]
         if "disaster_type" not in data:
             st.info("The disaster type field is unavailable in this CSV.")
         elif available_impact_labels:
-            impact_choice = st.selectbox(
-                "Impact measure", available_impact_labels,
-                label_visibility="collapsed", key="impact_measure"
-            )
+            impact_choice = st.selectbox("Impact measure", available_impact_labels, label_visibility="collapsed", key="impact_measure")
             impact_column, impact_unit = IMPACTS[impact_choice]
             if filtered[impact_column].notna().any():
-                st.plotly_chart(
-                    impact_chart(filtered, impact_column, impact_unit),
-                    use_container_width=True, config={"displayModeBar": False}
-                )
-                st.caption(
-                    f"Reported {impact_choice.lower()} only · blanks excluded · "
-                    f"unit: {impact_unit}"
-                )
+                st.plotly_chart(impact_chart(filtered, impact_column, impact_unit), use_container_width=True, config={"displayModeBar": False})
+                st.caption(f"Reported {impact_choice.lower()} only · blanks excluded · unit: {impact_unit}")
             else:
                 st.info(f"No reported {impact_choice.lower()} values in this filtered view.")
         else:
@@ -459,26 +389,15 @@ with chart_right:
 
 st.markdown("<div style='height:25px'></div>", unsafe_allow_html=True)
 with st.container(border=True):
-    st.markdown(
-        '<div class="section-kicker">03 / SOURCE RECORDS</div>'
-        '<div class="section-title">Event records</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="section-kicker">03 / SOURCE RECORDS</div><div class="section-title">Event records</div>', unsafe_allow_html=True)
     table_info, search_col = st.columns([1.2, 2], vertical_alignment="center")
     with table_info:
         st.markdown(f'<div class="micro">{len(filtered_raw):,} FILTERED RECORDS</div>', unsafe_allow_html=True)
     with search_col:
-        search_text = st.text_input(
-            "Search event records",
-            placeholder="Search ID, event type, subtype, place…",
-            label_visibility="collapsed", key="record_search"
-        )
+        search_text = st.text_input("Search event records", placeholder="Search ID, event type, subtype, place…", label_visibility="collapsed", key="record_search")
 
     # Keep source column names and cell values from the original CSV in the visible table.
-    preferred_columns = [
-        "disaster_id", "date", "disaster_type", "disaster_subtype", "location",
-        "severity", "deaths", "total_affected", "economic_loss_000_usd", "source",
-    ]
+    preferred_columns = ["disaster_id", "date", "disaster_type", "disaster_subtype", "location", "severity", "deaths", "total_affected", "economic_loss_000_usd", "source"]
     table_columns = []
     for canonical in preferred_columns:
         source_col = resolved_columns.get(canonical)
@@ -490,16 +409,11 @@ with st.container(border=True):
     source_table = filtered_raw[table_columns].copy()
     if search_text.strip():
         search_mask = source_table.astype("string").apply(
-            lambda series: series.str.contains(
-                search_text.strip(), case=False, regex=False, na=False
-            )
+            lambda series: series.str.contains(search_text.strip(), case=False, regex=False, na=False)
         ).any(axis=1)
         source_table = source_table.loc[search_mask]
     st.dataframe(source_table, use_container_width=True, hide_index=True, height=365)
-    st.caption(
-        f"Showing {len(source_table):,} visible records · "
-        "original source values and column names preserved"
-    )
+    st.caption(f"Showing {len(source_table):,} visible records · original source values and column names preserved")
 
 
 st.markdown("<div style='height:23px'></div>", unsafe_allow_html=True)
@@ -522,9 +436,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown(
-    '<div style="border-top:1px solid #D9E3E8;margin-top:22px;padding-top:12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:#788A98;font-family:DM Mono,monospace;font-size:.65rem;letter-spacing:.08em">'
-    f'<span>DATA-DRIVEN DISASTER RESPONSE NOEL KALLINGAL-23BCE0612 AYMAN MOHAMMED-23BCE2218</span>'
-    f'<span>{len(raw_df):,} SOURCE RECORDS · INDIA · EM-DAT PUBLIC TABLE</span></div>',
-    unsafe_allow_html=True,
-)
+st.markdown('<div style="border-top:1px solid #D9E3E8;margin-top:22px;padding-top:12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;color:#788A98;font-family:DM Mono,monospace;font-size:.65rem;letter-spacing:.08em">'
+            f'<span>DATA-DRIVEN DISASTER RESPONSE NOEL KALLINGAL-23BCE0612 AYMAN MOHAMMED-23BCE2218</span><span>{len(raw_df):,} SOURCE RECORDS · INDIA · EM-DAT PUBLIC TABLE</span></div>',
+            unsafe_allow_html=True)

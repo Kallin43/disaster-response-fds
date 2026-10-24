@@ -263,7 +263,7 @@ missing_fields = [field for field in REQUIRED_FOR_DASHBOARD if field not in reso
 if missing_fields:
     st.warning("Some expected fields are unavailable: " + ", ".join(missing_fields) + ". Related filters, charts, or impact KPIs will be limited; records will not be fabricated.")
 else:
-    st.markdown('<div class="success">Source integrity preserved · CSV loaded successfully · unreported impact values remain unreported</div>', unsafe_allow_html=True)
+    st.markdown('<div class="success">Source integrity preserved · CSV loaded successfully · unreported impact values remain unreported · Use Light Mode</div>', unsafe_allow_html=True)
 
 all_years = sorted(data["_year"].dropna().astype(int).unique().tolist())
 dataset_span = f"{all_years[0]}–{all_years[-1]} DATASET" if all_years else "ALL AVAILABLE DATES"
